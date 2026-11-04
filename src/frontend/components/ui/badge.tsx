@@ -1,0 +1,3 @@
+import SpkBadge from '../../../@spk/uielements/spk-badge';
+import { cn } from '../../lib/utils';
+export function Badge({children,className}:{children:React.ReactNode;className?:string}) {const text=String(children);const tone=['Réussie','Payé','Rapproché','Normal','Validé','Actif','Active','Résolu'].includes(text)?'success':['Échoué','Échouée','Erreur','Rejeté','Bloquée','Critique','Écart détecté'].includes(text)?'danger':['En attente','Ouvert','Avertissement','Haute','À rapprocher'].includes(text)?'warning':'neutral';return <SpkBadge variant={tone==='neutral'?'primary/10':tone+'/10'} customClass={cn('badge','badge-'+tone,className)}><span className="badge-dot"/>{children}</SpkBadge>;}

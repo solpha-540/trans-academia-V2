@@ -1,0 +1,16 @@
+// Réutilisation des ressources Ynex / SPK fournies avec le dépôt.
+@use '../assets/scss/variables';
+@use '../assets/scss/tailwind/components';
+@use '../assets/scss/tailwind/cards';
+@use '../assets/scss/tailwind/buttons';
+@use '../assets/scss/tailwind/forms';
+@use '../assets/scss/tailwind/tables';
+@use '../assets/scss/tailwind/avatars';
+@use '../assets/scss/tailwind/breadcrumb';
+@use '../assets/scss/tailwind/pagination';
+@use '../assets/scss/switcher/vertical';
+@use '../assets/scss/custom/header';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

@@ -1,0 +1,4 @@
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { X } from 'lucide-react';
+import type { ReactNode } from 'react';
+export function SheetContent({title,description,children}:{title:string;description?:string;children:ReactNode}){return <DialogPrimitive.Portal><DialogPrimitive.Overlay className="dialog-overlay"/><DialogPrimitive.Content className="sheet-content" aria-describedby={description?'sheet-description':undefined}><div className="dialog-heading"><div><DialogPrimitive.Title>{title}</DialogPrimitive.Title>{description&&<DialogPrimitive.Description id="sheet-description">{description}</DialogPrimitive.Description>}</div><DialogPrimitive.Close className="btn btn-ghost btn-icon" aria-label="Fermer le panneau"><X size={19}/></DialogPrimitive.Close></div>{children}</DialogPrimitive.Content></DialogPrimitive.Portal>;}

@@ -15,7 +15,7 @@ export interface DemoDB {records:Record<string,RecordItem[]>;sessions:Record<str
 export function seed():DemoDB {
  const records:Record<string,RecordItem[]>={};
  for(const config of resourceList) {
-  const amount=config.group==='Administration'?5:38;
+  const amount=config.key==='prelevements'?2:config.group==='Administration'?5:38;
   records[config.key]=Array.from({length:amount},(_,i)=>{
    const module=['interurbain','kelasi','etudiant'][i%3];
    const record:RecordItem={id:config.key.slice(0,3).toUpperCase()+'-'+String(2026001+i),name:people[i%people.length],status:config.statuses[i%7===0?Math.min(2,config.statuses.length-1):i%4===0?1:0],module,createdAt:new Date(Date.UTC(2026,10,3-i%30,8+i%10,12)).toISOString()};
@@ -25,8 +25,17 @@ export function seed():DemoDB {
    }
    Object.assign(record,{entity:['TAC-Inter Urbain','TAC-Kelasi','TAC-Étudiant'][i%3]});
    if(config.fields.some(f=>f.key==='establishment')) record.establishment=institutions[i%4];
-   if(config.fields.some(f=>f.key==='cardNumber')) record.cardNumber='TAC-'+String(100245+i);
+   if(config.fields.some(f=>f.key==='cardNumber')) record.cardNumber=config.key==='cards'?'STDTAC'+String(20240110000+i):'TAC-'+String(100245+i);
    if(config.fields.some(f=>f.key==='registration')) record.registration='ETU-'+String(26001+i);
+   if(config.key==='students') {record.sex=i%2===0?'Féminin':'Masculin';record.phone='+243 '+['810','820','830','840'][i%4]+' '+String(100000+i).padStart(6,'0');}
+   if(config.key==='subscriptions') {record.currency='CDF';record.amount=(i+1)*2500;}
+   if(config.key==='prelevements') {
+    const examples=[
+     {date:'2026-11-11 05:25:57',generatedId:'STDTAC20240111076',reference:'APBXLO380581',cardNumber:'MPTAC085jejsva250489',name:'NKIDIAKA LUKIELO Papson',operator:'MPESA',phone:'24381919014',amount:21.5,status:'À valider'},
+     {date:'2026-11-11 09:08:09',generatedId:'STDTAC202401110970',reference:'LZLGG3801000',cardNumber:'MPTAC021wcrwzl080101',name:'Mulemba Onda Best',operator:'MPESA',phone:'24383393820',amount:41.5,status:'Validé'},
+    ];
+    Object.assign(record,examples[i%examples.length],{module:'etudiant'});
+   }
    if(config.key==='entities') record.name=['TAC-Inter Urbain','TAC-Kelasi','TAC-Étudiant','Direction Kinshasa','Direction Katanga'][i];
    if(config.key==='provinces') record.name=['Kinshasa','Kongo-Central','Haut-Katanga','Nord-Kivu','Sud-Kivu'][i];
    if(config.key==='establishments') record.name=institutions[i%4];
@@ -46,7 +55,39 @@ export function seed():DemoDB {
  return {records,sessions:{},challenges:{},settings:{}};
 }
 const storageKey='tac-demo-data-v1';
-export function loadDB():DemoDB {try{const raw=globalThis.localStorage?.getItem(storageKey);if(raw)return JSON.parse(raw);}catch{/* Storage unavailable: use memory. */}return seed();}
+export function loadDB():DemoDB {
+ try{
+  const storage=globalThis.localStorage;
+  const raw=storage?.getItem(storageKey);
+  if(raw){
+   const loaded=JSON.parse(raw) as DemoDB;
+   const defaults=seed();
+   let normalized=false;
+   loaded.records??={};
+   for(const config of resourceList){
+    if(!Array.isArray(loaded.records[config.key])){
+     loaded.records[config.key]=defaults.records[config.key];
+     normalized=true;
+    }
+   }
+   for(const [index,row] of loaded.records.students.entries()){
+    const fallback=defaults.records.students[index%defaults.records.students.length];
+    for(const key of ['sex','phone'] as const){
+     if(!row[key]){row[key]=fallback[key];normalized=true;}
+    }
+   }
+   for(const row of loaded.records.subscriptions){
+    if(row.currency!=='CDF'){row.currency='CDF';normalized=true;}
+   }
+   loaded.sessions??={};
+   loaded.challenges??={};
+   loaded.settings??={};
+   if(storage&&normalized){try{storage.setItem(storageKey,JSON.stringify(loaded));}catch{/* Keep the migrated data usable in memory. */}}
+   return loaded;
+  }
+ }catch{/* Storage unavailable or invalid: use fresh demo data. */}
+ return seed();
+}
 export let db=loadDB();
 export function saveDB(){try{globalThis.localStorage?.setItem(storageKey,JSON.stringify(db));}catch{/* Demo remains usable in memory. */}}
 export function resetDB(){const sessions=db.sessions;db=seed();db.sessions=sessions;saveDB();}
